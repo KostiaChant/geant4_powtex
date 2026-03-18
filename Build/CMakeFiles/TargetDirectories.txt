@@ -1,7 +1,0 @@
-/Users/irinastefanescu/g4new/ess/POWTEX/Build/CMakeFiles/install/local.dir
-/Users/irinastefanescu/g4new/ess/POWTEX/Build/CMakeFiles/install/strip.dir
-/Users/irinastefanescu/g4new/ess/POWTEX/Build/CMakeFiles/install.dir
-/Users/irinastefanescu/g4new/ess/POWTEX/Build/CMakeFiles/list_install_components.dir
-/Users/irinastefanescu/g4new/ess/POWTEX/Build/CMakeFiles/rebuild_cache.dir
-/Users/irinastefanescu/g4new/ess/POWTEX/Build/CMakeFiles/edit_cache.dir
-/Users/irinastefanescu/g4new/ess/POWTEX/Build/CMakeFiles/Powtex.dir

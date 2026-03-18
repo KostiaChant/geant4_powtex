@@ -2,7 +2,7 @@
 #
 # script to compile the Powtex application with cmake
 
-cd Build
+cd build
 
 rm -r * 
 
