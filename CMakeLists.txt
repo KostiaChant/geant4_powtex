@@ -42,4 +42,40 @@ target_link_libraries(Powtex ${Geant4_LIBRARIES})
 #
 install(TARGETS Powtex DESTINATION bin)
 
+#----------------------------------------------------------------------------
+# Install analysis scripts
+#
+install(DIRECTORY analysis/
+        DESTINATION share/powtex/analysis
+        FILES_MATCHING PATTERN "*.C"
+        PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
+                    GROUP_READ GROUP_EXECUTE
+                    WORLD_READ WORLD_EXECUTE)
+
+#----------------------------------------------------------------------------
+# Install Geant4 macro files
+#
+install(DIRECTORY macros/
+        DESTINATION share/powtex/macros
+        FILES_MATCHING PATTERN "*.mac"
+        PERMISSIONS OWNER_READ OWNER_WRITE
+                    GROUP_READ
+                    WORLD_READ)
+
+#----------------------------------------------------------------------------
+# Install helper scripts
+#
+install(DIRECTORY scripts/
+        DESTINATION share/powtex/scripts
+        FILES_MATCHING PATTERN "*.sh"
+        PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
+                    GROUP_READ GROUP_EXECUTE
+                    WORLD_READ WORLD_EXECUTE)
+
+#----------------------------------------------------------------------------
+# Install README and documentation
+#
+install(FILES README.md DESTINATION share/powtex)
+
+
 

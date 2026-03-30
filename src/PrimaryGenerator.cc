@@ -43,8 +43,18 @@ void PrimaryGenerator::GeneratePrimaryVertex(G4Event* event){
 
   FILE* input_file;
 
-//  input_file = fopen("/Users/irinastefanescu/g4new/ess/POWTEX/VitessDataPOWTEX/noutascii_reduced.dat","r");
-  input_file = fopen("/Users/irinastefanescu/g4new/ess/POWTEX/VitessDataPOWTEX/noutascii_biosample_r.dat","r");
+  // Try relative path first (new location), then fall back to old paths
+  input_file = fopen("data/input/VitessDataPOWTEX/noutascii_biosample_r.dat","r");
+
+  if (input_file == NULL) {
+    // Fallback to alternative data file
+    input_file = fopen("data/input/VitessDataPOWTEX/noutascii_reduced.dat","r");
+  }
+
+  if (input_file == NULL) {
+    // Last resort: try old absolute paths for backward compatibility
+    input_file = fopen("/Users/irinastefanescu/g4new/ess/POWTEX/VitessDataPOWTEX/noutascii_biosample_r.dat","r");
+  }
   
   char line[128];
 
@@ -104,7 +114,13 @@ void PrimaryGenerator::GeneratePrimaryVertex(G4Event* event){
 		  G4cout<<"Closed the file successfully. The file has "<<il<<" entries. "<<G4endl;
  		  G4cout<<" "<<G4endl;
  		  
-  } else    G4cout<<"Unable to open the file. "<<G4endl;
+  } else {
+    G4cout<<"ERROR: Unable to open neutron data file! "<<G4endl;
+    G4cout<<"Searched for: "<<G4endl;
+    G4cout<<"  - data/input/VitessDataPOWTEX/noutascii_biosample_r.dat"<<G4endl;
+    G4cout<<"  - data/input/VitessDataPOWTEX/noutascii_reduced.dat"<<G4endl;
+    G4cout<<"Please ensure the data files exist in data/input/VitessDataPOWTEX/"<<G4endl;
+  }
  
   
 }
