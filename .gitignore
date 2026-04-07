@@ -39,3 +39,8 @@ data/output/
 __pycache__/
 *.pyc
 
+# Readme html for printing
+README.html
+
+# Local architecture diagrams
+# diagrams/
