@@ -93,7 +93,7 @@ void PrimaryGenerator::GeneratePrimaryVertex(G4Event* event){
 			  G4PrimaryVertex* vertex = new G4PrimaryVertex(positionA,data[0]*millisecond);
 //			  G4PrimaryVertex* vertex = new G4PrimaryVertex(positionA,0); // initiate all neutrons at time 0
   
-		      G4double mc = particle->GetMass();
+        G4double mc = particle->GetMass();
 			  G4double kine = 0.081805*eV/data[1]/data[1]; //calculate kinetic energy as in Geant4
 			  G4double tmom = std::sqrt(kine*(kine+2*mc));  // total momentum
 		  
@@ -104,7 +104,7 @@ void PrimaryGenerator::GeneratePrimaryVertex(G4Event* event){
 //			  vertex->SetWeight(1);
 		  
 			  event->AddPrimaryVertex(vertex);
-			  
+			  IncrementNoPrimaries();
 		    
     }
    
@@ -112,6 +112,7 @@ void PrimaryGenerator::GeneratePrimaryVertex(G4Event* event){
 
 
 		  G4cout<<"Closed the file successfully. The file has "<<il<<" entries. "<<G4endl;
+      G4cout<<"Total number of primaries generated: "<<GetNoPrimaries()<<G4endl;
  		  G4cout<<" "<<G4endl;
  		  
   } else {

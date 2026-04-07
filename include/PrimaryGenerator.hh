@@ -20,8 +20,9 @@ public:
   ~PrimaryGenerator();
   
 public:
-  virtual void GeneratePrimaryVertex(G4Event*);
+  void GeneratePrimaryVertex(G4Event*) override;
   G4int GetNoPrimaries() const;
+  void IncrementNoPrimaries();
  
 private:
  
@@ -29,8 +30,8 @@ private:
   
 };
 
- inline G4int PrimaryGenerator::GetNoPrimaries() const { return fprimaries;}
- 
+ inline G4int PrimaryGenerator::GetNoPrimaries() const { return fprimaries; }
+ inline void PrimaryGenerator::IncrementNoPrimaries() { fprimaries++; }
 #endif
 
 

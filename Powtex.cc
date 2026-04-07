@@ -32,27 +32,25 @@ int main(int argc,char** argv) {
 
   G4String filename;
   bool interactive=false;
-  G4String interactiveFlag = "-i";
+  const G4String interactiveFlag = "-i";
 
- //....Last option is filename (unless it is -i)
+//....Last option is filename (unless it is -i)
   if(argc>1 && G4String(argv[argc-1]) != interactiveFlag) 
     filename = G4String(argv[argc-1]); 
 
- //....Make session interactive if "-i"
+//....Make session interactive if "-i"
   if(argc==1 || G4String(argv[1]) == interactiveFlag) interactive = true;
 
-//  remove("myfile_info.txt");
-  
+//  remove("myfile_info.txt");  
   if (remove("myfile_info.txt") !=0 )
-     puts ("File not found, continue....");
+    puts ("File not found, continue....");
   else 
     puts("Output file myfile_info.txt succesfully deleted at the begining of the run, continue....");
 
 
 //  remove("LookupTablePowtex.txt");
-  
   if (remove("LookupTablePowtex.txt") !=0 )
-     puts ("File not found, continue....");
+    puts ("File not found, continue....");
   else 
     puts("LookupTablePowtex.txt succesfully deleted at the begining of the run, continue....");
 
@@ -117,7 +115,7 @@ int main(int argc,char** argv) {
     }
   else           // Batch mode
     {
-      G4String command = "/control/execute ";
+      const G4String command = "/control/execute ";
       G4String fileName = argv[1];
       UI->ApplyCommand(command+fileName);
     }
