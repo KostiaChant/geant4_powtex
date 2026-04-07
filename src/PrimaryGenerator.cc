@@ -44,8 +44,9 @@ void PrimaryGenerator::GeneratePrimaryVertex(G4Event* event){
   FILE* input_file;
 
   // Try relative path first (new location), then fall back to old paths
-  input_file = fopen("data/input/VitessDataPOWTEX/noutascii_biosample_r.dat","r");
+  input_file = fopen("data/input/VitessDataPOWTEX/noutascii_reduced.dat","r");
 
+  /*
   if (input_file == NULL) {
     // Fallback to alternative data file
     input_file = fopen("data/input/VitessDataPOWTEX/noutascii_reduced.dat","r");
@@ -54,7 +55,7 @@ void PrimaryGenerator::GeneratePrimaryVertex(G4Event* event){
   if (input_file == NULL) {
     // Last resort: try old absolute paths for backward compatibility
     input_file = fopen("/Users/irinastefanescu/g4new/ess/POWTEX/VitessDataPOWTEX/noutascii_biosample_r.dat","r");
-  }
+  }*/
   
   char line[128];
 

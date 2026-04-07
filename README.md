@@ -168,15 +168,15 @@ The imprint number is used by the code to extract the module and segment number 
   
   - execute the code in 'batch' mode from macro file:
   
-	% ./Powtex  run.mac
+	% cd ./build && ./Powtex  ../macros/run.mac
 
   - execute the code in 'interactive mode' with visualization (see also Pct. 6 below):
   
-	% ./Powtex
+	% cd ./build && ./Powtex
 	
 	.... 
 	
-	Idle> /control/execute vis.mac
+	Idle> /control/execute ../macros/vis.mac
 	
 	....
 	
