@@ -9,9 +9,9 @@ void DumpTreeToTXT(){
 
   gSystem->Exec("rm data_powtex_biosample.csv");
 
-  TFile *f=new TFile("powtex.root"); // opens the root file
+  TFile *f=new TFile("data/output/powtex.root"); // opens the root file from pipeline output
   TTree *tr=(TTree*)f->Get("powtex_new"); // creates the TTree object
-  tr->AddFriend("powtex_new_cal","powtex_new_cal.root");
+  tr->AddFriend("powtex_new_cal","data/output/powtex_new_cal.root");
 //  tr->Scan("ntof"); // prints the content on the screen
 
   int nmodule,nstrip,nwire,nsegment,ncounter; // create variables of the same type as the branches you want to access
@@ -48,4 +48,10 @@ void DumpTreeToTXT(){
   
 
   myfile.close();
+}
+
+// Entry point matching filename for ROOT macro execution
+void Extract_branches()
+{
+  DumpTreeToTXT();
 }

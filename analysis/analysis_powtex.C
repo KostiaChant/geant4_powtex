@@ -366,3 +366,9 @@ for (Long64_t k=0; k<noev; k++){
 
 
 }
+
+// Entry point matching this macro filename for ROOT auto-execution.
+void analysis_powtex()
+{
+	analysis();
+}

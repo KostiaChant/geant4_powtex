@@ -75,7 +75,7 @@ if [ ! -f "myfile_info.txt" ]; then
     echo "  ✗ Error: myfile_info.txt not found. Simulation may have failed."
     exit 1
 fi
-root -l -b -q 'analysis/CreatePowtexTree.C'
+root -l -b -q 'analysis/CreatePowtexTree.C()'
 if [ $? -eq 0 ] && [ -f "powtex.root" ]; then
     echo "  ✓ ROOT tree created successfully (powtex.root)"
 else
@@ -90,7 +90,7 @@ if [ ! -f "LookupTablePowtex.txt" ]; then
     echo "  ✗ Error: LookupTablePowtex.txt not found. Simulation may have failed."
     exit 1
 fi
-root -l -b -q 'analysis/ReadLookupTable.C'
+root -l -b -q 'analysis/ReadLookupTable.C()'
 if [ $? -eq 0 ] && [ -f "powtex_lookup.root" ]; then
     echo "  ✓ Lookup table created successfully (powtex_lookup.root)"
 else
@@ -101,7 +101,7 @@ echo ""
 
 # Step 4: Run physics analysis
 echo "Step 4/4: Running physics analysis..."
-root -l -b -q 'analysis/analysis_powtex.C'
+root -l -b -q 'analysis/analysis_powtex.C()'
 if [ $? -eq 0 ] && [ -f "powtex_new_cal.root" ]; then
     echo "  ✓ Physics analysis completed successfully"
     echo "  ✓ Output files:"

@@ -18,10 +18,10 @@
 
 using namespace std;
 
-//Usage: .L analysis/CreatePowtexTree.C / CreatePowtexRootFile()
+//Usage: .L analysis/CreatePowtexTree.C / CreatePowtexTree()
 // Run this from the project root directory 
 
-void CreatePowtexRootFile()
+void CreatePowtexTree()
 {
      TTree* t=new TTree("powtex_ev","powtex_ev");
      
@@ -115,6 +115,12 @@ void CreatePowtexRootFile()
 	
 		 
 
+}
+
+// Backward-compatible alias for older documentation/scripts.
+void CreatePowtexRootFile()
+{
+        CreatePowtexTree();
 }
 	
 	

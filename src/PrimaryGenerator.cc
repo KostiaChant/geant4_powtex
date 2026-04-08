@@ -44,11 +44,11 @@ void PrimaryGenerator::GeneratePrimaryVertex(G4Event* event){
   FILE* input_file;
 
   // Try relative paths: first from project root, then from build directory
-  input_file = fopen("data/input/VitessDataPOWTEX/noutascii_reduced.dat","r");
+  input_file = fopen("data/input/VitessDataPOWTEX/noutascii_biosample_r.dat","r");
 
   if (input_file == NULL) {
     // Fallback for when running from build/ directory
-    input_file = fopen("../data/input/VitessDataPOWTEX/noutascii_reduced.dat","r");
+    input_file = fopen("../data/input/VitessDataPOWTEX/noutascii_biosample_r.dat","r");
   }
 
   if (input_file == NULL) {
