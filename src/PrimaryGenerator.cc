@@ -43,19 +43,23 @@ void PrimaryGenerator::GeneratePrimaryVertex(G4Event* event){
 
   FILE* input_file;
 
-  // Try relative path first (new location), then fall back to old paths
+  // Try relative paths: first from project root, then from build directory
   input_file = fopen("data/input/VitessDataPOWTEX/noutascii_reduced.dat","r");
 
-  /*
   if (input_file == NULL) {
-    // Fallback to alternative data file
-    input_file = fopen("data/input/VitessDataPOWTEX/noutascii_reduced.dat","r");
+    // Fallback for when running from build/ directory
+    input_file = fopen("../data/input/VitessDataPOWTEX/noutascii_reduced.dat","r");
   }
 
   if (input_file == NULL) {
-    // Last resort: try old absolute paths for backward compatibility
-    input_file = fopen("/Users/irinastefanescu/g4new/ess/POWTEX/VitessDataPOWTEX/noutascii_biosample_r.dat","r");
-  }*/
+    // Try the larger biosample file if reduced file not found
+    input_file = fopen("data/input/VitessDataPOWTEX/noutascii_biosample_r.dat","r");
+  }
+
+  if (input_file == NULL) {
+    // Fallback for biosample file when running from build/ directory
+    input_file = fopen("../data/input/VitessDataPOWTEX/noutascii_biosample_r.dat","r");
+  }
   
   char line[128];
 
@@ -119,9 +123,12 @@ void PrimaryGenerator::GeneratePrimaryVertex(G4Event* event){
   } else {
     G4cout<<"ERROR: Unable to open neutron data file! "<<G4endl;
     G4cout<<"Searched for: "<<G4endl;
-    G4cout<<"  - data/input/VitessDataPOWTEX/noutascii_biosample_r.dat"<<G4endl;
     G4cout<<"  - data/input/VitessDataPOWTEX/noutascii_reduced.dat"<<G4endl;
+    G4cout<<"  - ../data/input/VitessDataPOWTEX/noutascii_reduced.dat"<<G4endl;
+    G4cout<<"  - data/input/VitessDataPOWTEX/noutascii_biosample_r.dat"<<G4endl;
+    G4cout<<"  - ../data/input/VitessDataPOWTEX/noutascii_biosample_r.dat"<<G4endl;
     G4cout<<"Please ensure the data files exist in data/input/VitessDataPOWTEX/"<<G4endl;
+    G4cout<<"Tip: Run from project root with: ./build/Powtex ../macros/run.mac"<<G4endl;
   }
  
   
