@@ -48,7 +48,7 @@ void PrimaryGenerator::GeneratePrimaryVertex(G4Event* event){
 
   if (input_file == NULL) {
     // Fallback for when running from build/ directory
-    input_file = fopen("../data/input/VitessDataPOWTEX/noutascii_biosample_r.dat","r");
+    input_file = fopen("../data/input/VitessDataPOWTEX/trajectories_almost_isotropic.dat","r");
   }
 
   if (input_file == NULL) {
@@ -74,6 +74,11 @@ void PrimaryGenerator::GeneratePrimaryVertex(G4Event* event){
   	   while (fgets(line,128,input_file) != NULL)
   	   
   	   {
+  	      // Skip header lines and empty lines
+  	      if (line[0] == '#' || line[0] == '\n' || line[0] == '\0') {
+  	        continue;
+  	      }
+  	      
 		  	  sscanf(line,"%s %s %s %s %s %s %s %s %s",aa,bb,cc,dd,ee,ff,gg,hh,kk);
 				
 			  data[0]=strtod(aa,NULL); // tof in ms	  
