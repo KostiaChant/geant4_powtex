@@ -6,15 +6,18 @@ This folder contains architecture diagrams for the POWTEX Geant4 simulation code
 
 1. simulation_data_flow.md
 - Purpose: User-friendly overview of simulation control flow and data flow.
-- Focus: How main setup, detector construction, primary generation, stepping, and analysis outputs connect.
+- Focus: How main setup, detector construction, primary generation, messenger command routing, and analysis outputs connect.
+- Primary-generation note: Includes both command-line input-file setup and macro command routing via messenger.
 
-1. class_uml.md
+2. class_uml.md
 - Purpose: UML-style class relationship diagram.
 - Focus: Inheritance from Geant4 base classes and key ownership/usage relationships in project classes.
+- Primary-generation note: Includes PrimaryGeneratorMessenger and input-file lock/preference behavior in class members and relations.
 
-1. output_analysis_pipeline.md
+3. output_analysis_pipeline.md
 - Purpose: End-to-end output artifact and analysis pipeline map.
 - Focus: Generated simulation text files, ROOT macros, intermediate ROOT files, and optional CSV export.
+- Primary-generation note: Shows runtime configuration path from command-line and macro command into the primary generator.
 
 ## Visual conventions
 
@@ -26,11 +29,12 @@ This folder contains architecture diagrams for the POWTEX Geant4 simulation code
 
 - The diagrams are intentionally high-level and show the core architecture.
 - They do not enumerate every Geant4 helper type used in implementation.
-- They focus on the detector workflow implemented in this codebase (as of 07.04.2026).
+- They focus on the detector workflow implemented in this codebase (as of 09.04.2026).
 
 ## Maintenance guidelines
 
 - Update diagrams when class names, ownership, or major data products change.
+- Update diagrams when primary-input command names, command-line flags, or precedence behavior changes.
 - Keep color semantics consistent across all diagram files.
 - If a new detector subsystem is added, extend both the flow and UML diagrams.
 - Automatic creation and adjustment through, e.g., Copilot.
