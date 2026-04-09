@@ -109,7 +109,7 @@ VITESS instrument. The final time-of-flight equals the VITESS time-of-flight plu
 travel time of the neutron from the sample until it disappears by absorption 
 (detection) in the detector volume or scatters off some material present in the setup and leaves the World volume (the mother volume). 
 
-Two sample files are provided as an example with the code. These files ar located in 
+Four sample files are provided as an example with the code. These files ar located in 
 the directory called *VitessDataPOWTEX*. 
 
 The *noutascii_reduced.dat* file contains the first 100 neutrons events from the large file 
