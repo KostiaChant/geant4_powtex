@@ -4,6 +4,7 @@
 // ********************************************************************
 //
 #include "PrimaryGenerator.hh"
+#include "PrimaryGeneratorMessenger.hh"
 #include "G4PrimaryParticle.hh"
 #include "G4SystemOfUnits.hh"
 #include "G4PhysicalConstants.hh"
@@ -24,11 +25,40 @@ using namespace std;
 //_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_
 PrimaryGenerator::PrimaryGenerator()
 : G4VPrimaryGenerator(),
-  fprimaries(0)
-{}
+  fprimaries(0),
+  fInputFilePath(""),
+  fInputFileLockedByCommandLine(false),
+  fMessenger(0)
+{
+  fMessenger = new PrimaryGeneratorMessenger(this);
+}
 
 PrimaryGenerator::~PrimaryGenerator()
-{}
+{
+  delete fMessenger;
+}
+
+void PrimaryGenerator::SetInputFilePath(const G4String& filePath)
+{
+  if (fInputFileLockedByCommandLine) {
+    G4cout << "Primary input file is locked by command line override: "
+           << fInputFilePath << G4endl;
+    return;
+  }
+
+  fInputFilePath = filePath;
+  G4cout << "Primary input file set from macro/UI command: "
+         << fInputFilePath << G4endl;
+}
+
+void PrimaryGenerator::SetInputFilePathFromCommandLine(const G4String& filePath)
+{
+  fInputFilePath = filePath;
+  fInputFileLockedByCommandLine = true;
+
+  G4cout << "Primary input file set from command line: "
+         << fInputFilePath << G4endl;
+}
 
 
 void PrimaryGenerator::GeneratePrimaryVertex(G4Event* event){
@@ -41,24 +71,10 @@ void PrimaryGenerator::GeneratePrimaryVertex(G4Event* event){
   
   G4double data[9];
 
-  FILE* input_file;
+  FILE* input_file = 0;
 
-  // Try relative paths: first from project root, then from build directory
-  input_file = fopen("data/input/VitessDataPOWTEX/noutascii_biosample_r.dat","r");
-
-  if (input_file == NULL) {
-    // Fallback for when running from build/ directory
-    input_file = fopen("../data/input/VitessDataPOWTEX/trajectories_almost_isotropic.dat","r");
-  }
-
-  if (input_file == NULL) {
-    // Try the larger biosample file if reduced file not found
-    input_file = fopen("data/input/VitessDataPOWTEX/noutascii_biosample_r.dat","r");
-  }
-
-  if (input_file == NULL) {
-    // Fallback for biosample file when running from build/ directory
-    input_file = fopen("../data/input/VitessDataPOWTEX/noutascii_biosample_r.dat","r");
+  if (!fInputFilePath.empty()) {
+    input_file = fopen(fInputFilePath.c_str(),"r");
   }
   
   char line[128];
@@ -67,6 +83,7 @@ void PrimaryGenerator::GeneratePrimaryVertex(G4Event* event){
 
   {
 	  
+	  G4cout<<"Using primary input file: "<<fInputFilePath<<G4endl;
  	  G4cout<<"input file successfully opened, start reading data...."<<G4endl;
 	  G4cout<<" "<<G4endl;
    
@@ -127,13 +144,13 @@ void PrimaryGenerator::GeneratePrimaryVertex(G4Event* event){
  		  
   } else {
     G4cout<<"ERROR: Unable to open neutron data file! "<<G4endl;
-    G4cout<<"Searched for: "<<G4endl;
-    G4cout<<"  - data/input/VitessDataPOWTEX/noutascii_reduced.dat"<<G4endl;
-    G4cout<<"  - ../data/input/VitessDataPOWTEX/noutascii_reduced.dat"<<G4endl;
-    G4cout<<"  - data/input/VitessDataPOWTEX/noutascii_biosample_r.dat"<<G4endl;
-    G4cout<<"  - ../data/input/VitessDataPOWTEX/noutascii_biosample_r.dat"<<G4endl;
-    G4cout<<"Please ensure the data files exist in data/input/VitessDataPOWTEX/"<<G4endl;
-    G4cout<<"Tip: Run from project root with: ./build/Powtex ../macros/run.mac"<<G4endl;
+    if (fInputFilePath.empty()) {
+      G4cout<<"No input file was configured."<<G4endl;
+      G4cout<<"Set it via macro command /powtex/source/inputFile <path> "
+            <<"or pass --input-file <path> on the command line."<<G4endl;
+    } else {
+      G4cout<<"Configured path: "<<fInputFilePath<<G4endl;
+    }
   }
  
   

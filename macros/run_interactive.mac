@@ -1,0 +1,12 @@
+ # x-axis: red, y-axis: green, z-axis:blue
+
+
+/tracking/verbose 0
+/event/verbose 0
+/control/verbose 0
+/material/verbose 0
+/process/em/verbose 0
+/process/list
+/process/eLoss/StepFunction 0.1 0.001 um
+
+/run/beamOn 1

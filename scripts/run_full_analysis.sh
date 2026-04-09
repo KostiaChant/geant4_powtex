@@ -59,7 +59,7 @@ if [ ! -f "$MACRO_FILE" ]; then
 fi
 
 # Step 1: Run Geant4 simulation
-echo "Step 1/4: Running Geant4 simulation..."
+echo "Step 1/5: Running Geant4 simulation..."
 ./build/Powtex "$MACRO_FILE"
 if [ $? -eq 0 ]; then
     echo "  ✓ Simulation completed successfully"
@@ -70,7 +70,7 @@ fi
 echo ""
 
 # Step 2: Convert raw data to ROOT format
-echo "Step 2/4: Converting data to ROOT format..."
+echo "Step 2/5: Converting data to ROOT format..."
 if [ ! -f "myfile_info.txt" ]; then
     echo "  ✗ Error: myfile_info.txt not found. Simulation may have failed."
     exit 1
@@ -85,7 +85,7 @@ fi
 echo ""
 
 # Step 3: Build lookup table
-echo "Step 3/4: Building voxel lookup table..."
+echo "Step 3/5: Building voxel lookup table..."
 if [ ! -f "LookupTablePowtex.txt" ]; then
     echo "  ✗ Error: LookupTablePowtex.txt not found. Simulation may have failed."
     exit 1
@@ -100,7 +100,7 @@ fi
 echo ""
 
 # Step 4: Run physics analysis
-echo "Step 4/4: Running physics analysis..."
+echo "Step 4/5: Running physics analysis..."
 root -l -b -q 'analysis/analysis_powtex.C()'
 if [ $? -eq 0 ] && [ -f "powtex_new_cal.root" ]; then
     echo "  ✓ Physics analysis completed successfully"
@@ -113,7 +113,7 @@ else
 fi
 echo ""
 
-# Optional: Move output files to data/output directory
+# Move output files to data/output directory
 echo "Moving output files to data/output/..."
 mkdir -p data/output
 mv -f powtex.root data/output/ 2>/dev/null || true
@@ -124,11 +124,23 @@ mv -f LookupTablePowtex.txt data/output/ 2>/dev/null || true
 echo "  ✓ Output files moved to data/output/"
 echo ""
 
+# Step 5: Export detections to CSV
+echo "Step 5/5: Exporting detections CSV..."
+root -l -b -q 'analysis/Extract_branches.C()'
+if [ $? -eq 0 ] && [ -f "detections.csv" ]; then
+    mv -f detections.csv data/output/
+    echo "  ✓ CSV export completed successfully"
+    echo "  ✓ CSV file: data/output/detections.csv"
+else
+    echo "  ✗ Failed to export CSV detections"
+    exit 1
+fi
+echo ""
+
 echo "========================================"
 echo "Analysis pipeline completed successfully!"
 echo "========================================"
 echo ""
 echo "Results are in: data/output/"
 echo ""
-echo "To export data to CSV, run:"
-echo "  root -l -q 'analysis/Extract_branches.C'"
+echo "CSV detections file: data/output/detections.csv"

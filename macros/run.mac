@@ -9,4 +9,7 @@
 /process/list
 /process/eLoss/StepFunction 0.1 0.001 um
 
+# Default primary input file (used when no command-line override is provided)
+/powtex/source/inputFile data/input/VitessDataPOWTEX/isotrop_reduced.dat
+
 /run/beamOn 1

@@ -7,12 +7,16 @@
 #include "PrimaryGenerator.hh"
 
 //_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_
-PrimaryGeneratorAction::PrimaryGeneratorAction()
+PrimaryGeneratorAction::PrimaryGeneratorAction(const G4String& inputFileFromCommandLine)
 : G4VUserPrimaryGeneratorAction(),fPrimaryGenerator(0)
   
 {
 
   fPrimaryGenerator = new PrimaryGenerator();
+
+  if (!inputFileFromCommandLine.empty()) {
+    fPrimaryGenerator->SetInputFilePathFromCommandLine(inputFileFromCommandLine);
+  }
 
 }
 

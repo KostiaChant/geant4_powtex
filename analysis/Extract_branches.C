@@ -7,7 +7,7 @@ using namespace std;
 
 void DumpTreeToTXT(){
 
-  gSystem->Exec("rm data_powtex_biosample.csv");
+  gSystem->Exec("rm -f detections.csv");
 
   TFile *f=new TFile("data/output/powtex.root"); // opens the root file from pipeline output
   TTree *tr=(TTree*)f->Get("powtex_new"); // creates the TTree object
@@ -33,7 +33,7 @@ void DumpTreeToTXT(){
   tr->SetBranchAddress("nvoxel_z",&nvoxel_z); 
 
   ofstream myfile;
-  myfile.open ("data_powtex_biosample.csv");
+  myfile.open ("detections.csv");
   myfile<<"tof [ns]"<<"\t"<<"lambda [A]"<<"\t"<<"module"<<"\t"<<"segment"<<"\t"<<"counter"<<"\t"<<"wire"<<"\t"<<"strip"<<"\t"<<"x_pos [mm]"<<"\t"<<"y_pos [mm]"<<"\t"<<"z_pos [mm]"<<"\t"<<"voxel_x [mm]"<<"\t"<<"voxel_y [mm]"<<"\t"<<"voxel_z [mm]\n";
   
   for (int i=0;i<tr->GetEntries();i++){
