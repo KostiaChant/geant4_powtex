@@ -1,19 +1,50 @@
      			
- // declare them in the *icc file, otherwise I get Segmentation fault 
- // when somewhere in the physics class....there is also something wrong with the 
- // geometry, most likely memory is screwed up
- 
- // G4LogicalVolume*  logicTrdGLtopright[128][32];
- // G4LogicalVolume*  logicTrdGLtopleft[128][32];
- // G4LogicalVolume*  logicTrdGLbottomright[128][32];
- // G4LogicalVolume*  logicTrdGLbottomleft[128][32];
- 
-  G4LogicalVolume*  logicTrdAl;
-  G4LogicalVolume*  logicTrdB;
-  G4LogicalVolume*  logicTrdCathodeC1;
-  G4LogicalVolume*  logicTrdCathodeC2;
-  G4LogicalVolume*  logicTrdCathodeS;
- // G4LogicalVolume*  logicTrdGas;  
-  G4LogicalVolume*  logicBShield;
+/// Mantel detector logical volumes - member variable declarations
+/// 
+/// DETECTOR GEOMETRY STRUCTURE (from outer to inner):
+/// - Trd1 (Aluminum haube): Full outer structure for detector support
+/// - Trd2 (Boron converter haube): Neutron conversion layer on detector walls
+/// - Trd3 (Gas volume): Active detection medium containing gas voxels
+/// - Trd4 (Cathode substrate): Aluminum cathode backing
+/// - Trd5/Trd6 (Cathode converters): Boron conversion layers on cathode sides
+/// - Bshield: Boron shielding at the back
+///
+/// These member variables maintain proper lifetime and memory management.
+/// Large array allocations (gas voxel layers) are declared locally in the .icc file
+/// to avoid segmentation faults when accessed by physics classes.
+///
+/// GEOMETRY COMPOSITION (from exterior to interior):
+/// - Haube coating: Created by subtracting Trd2 from Trd1 (logicTrdAl)
+/// - Converter haube: Created by subtracting Trd3 from Trd2 (logicTrdB)
+/// - Gas voxels (top/bottom, left/right): 2D arrays created in .icc file
+/// - Cathode assembly: Substrate + dual converter layers
+/// - Shielding: Boron protection at detector rear
 
- // G4LogicalVolume*  logicBoxVoxel;
+ /// Aluminum substrate haube (detector outer housing and support structure)
+ /// Created as: G4SubtractionSolid(Trd1 - Trd2) to form the structural layer
+ G4LogicalVolume*  logicTrdAl;
+ 
+ /// Boron converter coating on haube (attached to outer detector walls)
+ /// Created as: G4SubtractionSolid(Trd2 - Trd3) to form the conversion layer
+ G4LogicalVolume*  logicTrdB;
+ 
+ /// First boron converter layer on cathode (left/upper side)
+ /// Created from Trd5, provides neutron conversion on cathode surface
+ G4LogicalVolume*  logicTrdCathodeC1;
+ 
+ /// Second boron converter layer on cathode (right/lower side)
+ /// Created from Trd6, provides neutron conversion on opposite cathode surface
+ G4LogicalVolume*  logicTrdCathodeC2;
+ 
+ /// Aluminum substrate on cathode (cathode backing support)
+ /// Created from Trd4, provides structural support for cathode converters
+ G4LogicalVolume*  logicTrdCathodeS;
+ 
+ /// Boron shielding at the back of detector (rear protection)
+ /// Blocks background neutrons approaching from behind
+ G4LogicalVolume*  logicBShield;
+
+ /// NOTE: Gas voxel logical volumes (logicTrdGLtopleft, logicTrdGLbottomleft, etc.)
+ /// are declared as local 2D arrays in the .icc file to avoid memory conflicts
+ /// with physics classes. Each strip-wire combination creates a gas voxel
+ /// for independent track reconstruction and TOF measurement.

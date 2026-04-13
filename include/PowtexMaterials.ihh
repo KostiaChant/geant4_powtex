@@ -1,5 +1,10 @@
+/// Gas material used in the detector active volume
 G4Material* gas_mat;
+/// Aluminum material for haube (detector housing)
 G4Material* haube_mat;
+/// Converter material (boron coating on detector walls and cathode)
 G4Material* conv_mat;
+/// Non-converter material (shielding, e.g., boron10 or similar)
 G4Material* nconv_mat;
+/// World volume material (typically vacuum or air)
 G4Material* world_mat; 

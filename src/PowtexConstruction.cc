@@ -104,7 +104,7 @@ G4VPhysicalVolume* PowtexConstruction::Construct()
   
   G4int nM = 8;   // no of cassettes Mantel
  
-  G4int no_modulesM = 20;  // 45 for the whole cylinder Mantel
+  G4int no_modulesM = 10;  // 45 for the whole cylinder Mantel
   
   G4int n_stripsM = 192; 
   G4int n_wiresM = 16;  
