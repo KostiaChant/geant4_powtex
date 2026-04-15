@@ -103,6 +103,9 @@ flowchart TB
   CSV_TMP --> MOVE5
   MOVE5 --> CSV_OUT
 
+  S5["analysis/plot_detections.ipynb<br/>(3D Event Visualization)"]
+  CSV_OUT --> S5
+
   BATCH --> MAIN
   BATCH --> S1
   BATCH --> S2
@@ -115,11 +118,13 @@ flowchart TB
   classDef g4 fill:#d9ecff,stroke:#2f6fad,color:#0b2a44,stroke-width:1.5px;
   classDef data fill:#fff7cc,stroke:#b89b00,color:#3a3000,stroke-width:1.5px;
   classDef cfg fill:#ececec,stroke:#5a5a5a,color:#202020,stroke-width:1.5px;
+  classDef jupyter fill:#e6b8ff,stroke:#8b5fad,color:#2a1a3a,stroke-width:1.5px;
 
   class MAIN,DET,STEP,PGA,PG,PGM,SRC,S1,S2,S3,S4,BATCH,MOVE14,MOVE5 user;
   class RM,PHYS,KERNEL g4;
   class HITTXT,LOOKUPTXT,ROOT1_TMP,ROOT2_TMP,ROOT3_TMP,CSV_TMP,HITTXT_OUT,LOOKUPTXT_OUT,ROOT1_OUT,ROOT2_OUT,ROOT3_OUT,CSV_OUT data;
   class CLI,MAC cfg;
+  class S5 jupyter;
 ```
 
 Legend:
@@ -127,5 +132,7 @@ Legend:
 - Blue nodes: Geant4 components provided by default.
 - Yellow nodes: generated data artifacts (both temporary and final stored outputs).
 - Gray nodes: runtime input-configuration commands for primary source selection.
+- Purple nodes: optional Jupyter notebook tools for data visualization and analysis.
 - Precedence rule: command-line --input-file/-f value is locked and cannot be overridden later by macro commands.
 - Step ordering in scripts/run_full_analysis.sh: steps 1-4 create/update ROOT files, then files are moved to data/output/, then Extract_branches.C reads from data/output and exports detections.csv.
+- The plot_detections.ipynb notebook is optional and can be used for interactive 3D visualization of detection events.

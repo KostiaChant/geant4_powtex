@@ -16,20 +16,23 @@ This folder contains architecture diagrams for the POWTEX Geant4 simulation code
 
 3. output_analysis_pipeline.md
 - Purpose: End-to-end output artifact and analysis pipeline map.
-- Focus: Generated simulation text files, ROOT macros, intermediate ROOT files, and optional CSV export.
+- Focus: Generated simulation text files, ROOT macros, intermediate ROOT files, optional CSV export, and interactive visualization.
 - Primary-generation note: Shows runtime configuration path from command-line and macro command into the primary generator.
+- Visualization note: Includes optional plot_detections.ipynb notebook for 3D event visualization.
 
 ## Visual conventions
 
 - Orange nodes/classes: Explicitly coded in this repository.
 - Blue nodes/classes: Geant4 default framework/package components.
 - Yellow nodes/classes: Generated data artifacts (used in the output-analysis diagram).
+- Purple nodes/classes: Interactive Jupyter notebooks for data visualization and analysis.
 
 ## Notes and scope
 
 - The diagrams are intentionally high-level and show the core architecture.
 - They do not enumerate every Geant4 helper type used in implementation.
-- They focus on the detector workflow implemented in this codebase (as of 09.04.2026).
+- They focus on the detector workflow implemented in this codebase (as of 14.04.2026).
+- Last verified for accuracy on 14.04.2026.
 
 ## Maintenance guidelines
 
