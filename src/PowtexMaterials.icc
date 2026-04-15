@@ -1,23 +1,34 @@
 
-// Materials used by all Jalousie Detectors
+// Powtex material definitions
+//
+// This include initializes the material pointers declared in
+// PowtexMaterials.ihh. It is included from PowtexConstruction::DefineMaterials().
+//
+// The material list intentionally keeps several alternatives (alloys/gases)
+// available for quick detector studies without changing class interfaces.
 
 
 
+  // Central Geant4 material/element factory.
   G4NistManager* man = G4NistManager::Instance();
 
+  // Frequently used reference materials from the NIST database.
   G4Material* matAl  = man->FindOrBuildMaterial("G4_Al");
   G4Material* matCu  = man->FindOrBuildMaterial("G4_Cu");
   G4Material* lab_air = man->FindOrBuildMaterial("G4_AIR");
   G4Material* natB4C = man->FindOrBuildMaterial("G4_BORON_CARBIDE");
 
+  // Legacy placeholders kept for compatibility with utility constructors.
   G4String name,symbol;
   G4double z;
   G4int natoms;
   
-  G4double temperature = 293*kelvin; //room temperature
+  // Nominal operating conditions for gas definitions.
+  G4double temperature = 293*kelvin; // room temperature
   G4double pressure = 1.0*atmosphere; 
 
 
+  // Define enriched boron isotope composition for custom converter material.
   G4Isotope* B_10 = new G4Isotope("10B", 5, 10, 10.811*g/mole); 
   G4Isotope* B_11 = new G4Isotope("11B", 5, 11, 11.0093*g/mole); 
 
@@ -25,18 +36,22 @@
              boron->AddIsotope(B_10, 98.*perCent);
              boron->AddIsotope(B_11, 2.*perCent);
   
+  // Pure 10B material is kept as an optional study target.
   G4Element* rB10 = new G4Element("pure 10B","rB10",1);
              rB10->AddIsotope(B_10,100.*perCent);
   G4Material* matB10 = new G4Material("rB10", 2.34*g/cm3, 1);
               matB10-> AddElement(rB10, 1);
 
+  // Boron carbide built from enriched boron + carbon.
   G4Material* B4C = new G4Material ("BoronCarbide",2.34*g/cm3,2);
               B4C->AddElement(boron, 77.*perCent); // 4 atoms x Z=5 + 1 atom x Z=6 = 100%
               B4C->AddElement(man->FindOrBuildElement("C"), 23.*perCent);
   
+  // Default world material (high vacuum).
   G4Material* Vacuum = new G4Material("Galactic",1,1.01*g/mole,1.e-25*g/cm3,kStateGas,2.73*kelvin,3.e-18*pascal);
   
- // from www.aalco.co.uk
+  // Candidate aluminum alloys for detector mechanics.
+  // Al5083 composition from www.aalco.co.uk
   G4Material* Al5083 = new G4Material("Al5083", 2.65* g/cm3, 3);
   			  Al5083->AddElement(man->FindOrBuildElement("Mn"), 0.004);
   			  Al5083->AddElement(man->FindOrBuildElement("Mg"), 0.04);
@@ -55,9 +70,9 @@
   			Al6061T6->AddElement(man->FindOrBuildElement("Mg"), 0.01);
   			Al6061T6->AddElement(man->FindOrBuildElement("Fe"), 0.007);  
   			  			
-  // given below is a list of commonly used counting gasses in B-lined detectors
+  // Gas-mixture helper for B-lined detector counting gases.
   
-  // when the counting gas is a mixture of NIST gases, e.g., Ar-CO2 70-30:
+  // Case 1: counting gas from NIST components (example: Ar/CO2 80/20 by mass).
   
   DefineUserGas *uGas = new DefineUserGas(); 
 
@@ -67,13 +82,14 @@
   matNames.push_back(man->FindOrBuildMaterial("G4_Ar")); massFraction.push_back(0.8);
   matNames.push_back(man->FindOrBuildMaterial("G4_CARBON_DIOXIDE")); massFraction.push_back(0.2);
   
+  // Effective material properties for the mixed counting gas.
   G4double den  = uGas->GetUserGasDensity(matNames,massFraction); 
   G4double aeff = uGas->GetUserGasAeff(matNames,massFraction);  	 
   G4double zeff = uGas->GetUserGasZeff(matNames,massFraction);     
   
   G4Material* ArCO2 = new G4Material ("Ar_CO2",zeff,aeff*g/mole,den*g/cm3,kStateGas,temperature, pressure);
 
- // when the counting gas is not a NIST gas, e.g., CF4:
+  // Case 2: counting gas built directly from elements (example: CF4).
 
   std::vector<G4int> nbAtoms;
   std::vector<G4Element*> elNames;
@@ -83,9 +99,11 @@
     
   G4Material* CF4 = uGas->ConstructUserGas(name="lab_CF4",elNames,nbAtoms,temperature, pressure);
   
+  // Cleanup of temporary vectors used for gas construction.
   elNames.clear();nbAtoms.clear();matNames.clear();massFraction.clear();
 
 
+  // Default material assignments used by detector construction.
   world_mat = Vacuum;
   haube_mat = Al5083;
   gas_mat   = ArCO2;

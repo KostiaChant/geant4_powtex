@@ -1,5 +1,10 @@
 //******************************************************************************
-// DetectorConstruction.cc
+// PowtexConstruction.cc
+//
+// Top-level detector construction for Powtex.
+//
+// This file prepares global geometry/material parameters and delegates the
+// detailed Mantel segment/module construction to PowtexMantelConstruct.icc.
 //
 // 1.00 IS, FRM2, 2013:  First version.
 //******************************************************************************
@@ -61,11 +66,15 @@ PowtexConstruction::~PowtexConstruction()
 
 void PowtexConstruction::DefineMaterials()
 {
+  // Material members are declared in PowtexMaterials.ihh and assigned in this
+  // include to preserve the legacy material-definition workflow.
 #include "PowtexMaterials.icc"
 }
 
 G4VPhysicalVolume* PowtexConstruction::Construct()
 {
+
+    // Visualization palette for geometry inspection runs.
 
     G4Colour  white   (1.0, 1.0, 1.0) ;
   	G4Colour  grey    (0.5, 0.5, 0.5) ;
@@ -83,42 +92,48 @@ G4VPhysicalVolume* PowtexConstruction::Construct()
   	G4Colour  black   (0.0, 0.0, 0.0) ;
 
 
+	// Build all detector materials before creating logical volumes.
 	DefineMaterials();
 
+  // World volume that hosts all detector components.
   G4Box* solidWorld = new G4Box("World", 5.*m, 5.0*m, 5.*m);
   					       
   G4LogicalVolume* logicWorld = new G4LogicalVolume(solidWorld, world_mat, "World");
   G4VPhysicalVolume* physWorld = new G4PVPlacement(0, G4ThreeVector(0.0, 0.0, 0.0), logicWorld,
 			"World", 0, false, 0);
 
+  // Hide world box in visualization so only detector elements are visible.
   (*logicWorld).SetVisAttributes(G4VisAttributes::GetInvisible());
 
+  // Lookup-table output handle (opened and closed in PowtexMantelConstruct.icc).
   FILE* oFile;
 
-  G4double Bthick = 1.1*um; /*  thickness layer at 0 degree */
-  G4double Althick = 300.*um; /* thickness Al Cathode  */
+  // Mantel geometry configuration (all dimensions in Geant4 units).
+  G4double Bthick = 1.1*um; /* boron converter thickness at normal incidence */
+  G4double Althick = 300.*um; /* aluminum cathode thickness */
 
-  G4double shieldz = 5./2*cm; /*  boron shielding at the back */
+  G4double shieldz = 5./2*cm; /* boron shielding half-length at detector back */
 
-  G4double tilt_theta = -10.; /* inclination angle Mantel in deg */
+  G4double tilt_theta = -10.; /* Mantel inclination angle in degrees */
   
-  G4int nM = 8;   // no of cassettes Mantel
+  G4int nM = 8;   // number of segments (cassettes) per module
  
-  G4int no_modulesM = 10;  // 45 for the whole cylinder Mantel
+  G4int no_modulesM = 10;  // set 45 to fill the full cylindrical coverage
   
-  G4int n_stripsM = 192; 
-  G4int n_wiresM = 16;  
+  G4int n_stripsM = 192; // strips per segment (mirrored around center)
+  G4int n_wiresM = 16;   // wire layers per segment depth
   
-  G4double dist_det = 800*mm;   /* distance upper corner SUMO to the sample */
+  G4double dist_det = 800*mm;   /* sample-to-segment reference distance */
 
-  G4double init_angleM = 70; // 122 for the +3*mm setting, 123.2 for the 0*mm setting
+  G4double init_angleM = 70; // module ring start angle (legacy scan values kept in comment)
+  // 122 for the +3*mm setting, 123.2 for the 0*mm setting
   
-  G4double dthetaM = 0.469*M_PI/180;  /* for the Mantel strips */
+  G4double dthetaM = 0.469*M_PI/180;  /* angular pitch between neighboring strips */
   
-  G4double margin = 10.*mm; // empty space inside the segment front-back and left-right
-  G4double marginz = 3.*mm; // empty space inside the segment front-back and left-right
-  G4double margintb = 1.5*mm; // empty space inside the segment top-bottom
-  G4double seg_dist = 2*mm;     // distance between two neighbouring segments in order to avoid overlap
+  G4double margin = 10.*mm; // internal clearance in segment side directions
+  G4double marginz = 3.*mm; // internal clearance in segment longitudinal direction
+  G4double margintb = 1.5*mm; // reserved top/bottom clearance for geometry studies
+  G4double seg_dist = 2*mm; // minimum spacing between adjacent segments to avoid overlap
    
   G4double CathSubstrX1 = Althick/2;
   G4double CathSubstrX2 = Althick/2;
@@ -130,9 +145,10 @@ G4VPhysicalVolume* PowtexConstruction::Construct()
   G4double eta_w = 0.;  
   
   
-  G4RotationMatrix* rotT13 = new G4RotationMatrix();  // used for SUMOs and Mantel
-  G4RotationMatrix* rotTa = new G4RotationMatrix();  // used for Mantel
-  G4RotationMatrix* rotGL = new G4RotationMatrix();  // used for Mantel 
+  // Reused rotations for segment assemblies and gas voxels.
+  G4RotationMatrix* rotT13 = new G4RotationMatrix();  // assembly orientation
+  G4RotationMatrix* rotTa = new G4RotationMatrix();   // subtraction-solid orientation
+  G4RotationMatrix* rotGL = new G4RotationMatrix();   // gas voxel orientation
     
   G4ThreeVector Tvl, Tvr;
 
@@ -142,7 +158,7 @@ G4VPhysicalVolume* PowtexConstruction::Construct()
   G4ThreeVector TGL,Ts,Tsm,Tsc,Tnull;     
   
 
- // voxel variables for Mantel detectors. 
+ // Voxel-center caches used for placement and lookup-table generation.
 
  static double  voxelZZM[129][33];
  static double  voxelXXM[33];
@@ -155,13 +171,13 @@ G4VPhysicalVolume* PowtexConstruction::Construct()
  char const *outform2,*outform3;
  
 
-// this is the format for NeXus Mantel, added the k*dthetaM term
+// Extended NeXus-friendly output (kept for optional debug exports).
  outform3 = "%4d  %4d  %4d   %4d   %4d  %4d   %6.2f    %6.2f    %6.2f   %6.2f   %6.3f    %6.3f    %6.3f    %6.3f    %6.3f \n";
  
-//this is the format for my ROOT scripts
-
+// Compact lookup-table format used by ROOT analysis scripts.
  outform2 = "%4d  %4d  %4d  %4d   %4d   %4d     %8.3f    %8.3f   %8.3f\n";
 
+ // Global coordinate caches for transformed voxel centers.
  static double VYM[5000][32][128];
  static double VXM[5000][32][128];
  static double VZM[5000][32][128];
@@ -170,6 +186,7 @@ G4VPhysicalVolume* PowtexConstruction::Construct()
  static double syM[5000][32][128];
  static double szM[5000][32][128];
 
+ // Visualization attribute handles filled in the Mantel include.
  G4VisAttributes* TrAlu_vat;
  G4VisAttributes* TrBor_vat;
  G4VisAttributes* TrBShield_vat;
@@ -179,17 +196,11 @@ G4VPhysicalVolume* PowtexConstruction::Construct()
  G4VisAttributes* TrGLul_vat;
 
 
+ // Build Mantel geometry, place assemblies, and write lookup table.
 #include "PowtexMantelConstruct.icc"
 
 
-  //------------------------------------------------------------------
-  // Must return pointer to the master physical volume
-  //
-
-
+  // Return pointer to the master world physical volume.
   return physWorld;
-  
-  
-
 }
 

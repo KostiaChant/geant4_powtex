@@ -1,3 +1,8 @@
+/// Material pointers shared between DefineMaterials() and Construct().
+///
+/// These members are assigned in PowtexMaterials.icc and then consumed by
+/// geometry builders when creating logical volumes.
+
 /// Gas material used in the detector active volume
 G4Material* gas_mat;
 /// Aluminum material for haube (detector housing)

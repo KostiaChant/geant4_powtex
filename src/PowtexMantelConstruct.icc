@@ -1,5 +1,8 @@
-// The Powtex version of the Jalousie detector
-// adaptation of the original code written for the Dream version of the Jalousie detector
+// Powtex Mantel detector construction
+//
+// Adapted from the original Dream Jalousie implementation.
+// This include is intentionally kept as a monolithic geometry builder because
+// many local arrays are tightly coupled to placement and lookup-table export.
 // Written by Irina Stefanescu, ESS DG
 
 
@@ -8,21 +11,25 @@
   G4cout<<"   "<<G4endl;
   G4cout<<"   "<<G4endl;
 
-  G4double s_angle = 1.2;   /* solid angle covered by the segment+shielding */
+	// Legacy solid-angle helper kept for compatibility studies.
+	G4double s_angle = 1.2;   /* solid angle covered by the segment+shielding */
 
-  G4double Aly1 = 1719.2/2*mm; 
+	// Outer Al haube trapezoid half-dimensions.
+	G4double Aly1 = 1719.2/2*mm; 
   G4double Aly2 = 2316/2*mm;  
   G4double Alz = 255/2*mm;
   G4double Alx1 = 15.2/2*mm;
   G4double Alx2 = 22.8/2*mm;
   
-  G4double theta_y = atan((Aly2-Aly1)/2/Alz);   //angle in rad
-  G4double theta_x = atan((Alx2-Alx1)/2/Alz);   //angle in rad
+	// Taper angles of the segment walls.
+	G4double theta_y = atan((Aly2-Aly1)/2/Alz);   // angle in rad
+	G4double theta_x = atan((Alx2-Alx1)/2/Alz);   // angle in rad
 
   G4cout<<"angle wings segment theta_y [deg]= "<<theta_y*180/M_PI<<G4endl;
   G4cout<<"angle tapering segment theta_x [deg]= "<<theta_x*180/M_PI<<G4endl;
 
-  G4double By1 = Aly1 - Althick/cos(theta_y);
+	// Derived dimensions for B coating and active gas volume.
+	G4double By1 = Aly1 - Althick/cos(theta_y);
   G4double Bz = Alz - Althick;
   G4double Bx1 = Alx1 - Althick/cos(theta_x);
 
@@ -37,7 +44,8 @@
   G4double Gy2 = By2 - Bthick/cos(theta_y);
   G4double Gx2 = Bx2 - Bthick/cos(theta_x);
 
-  G4cout<<"tan(dthetaM) [rad] = "<<tan(dthetaM)<<G4endl;
+	// Geometry diagnostics printed at startup for quick sanity checks.
+	G4cout<<"tan(dthetaM) [rad] = "<<tan(dthetaM)<<G4endl;
   G4cout<<"sin(theta_x) [rad] = "<<sin(theta_x)<<G4endl;
   G4cout<<"tan(theta_x) [rad] = "<<tan(theta_x)<<G4endl;
   G4cout<<" "<<G4endl;
@@ -70,7 +78,8 @@
   G4cout<<"Gz [mm] = "<<Gz<<G4endl;
   G4cout<<"         "<<G4endl;
 
-  G4double CathSubstrY1 = By1 - margin;
+	// Cathode substrate and coating dimensions with configurable clearances.
+	G4double CathSubstrY1 = By1 - margin;
   G4double CathSubstrY2 = By2 - margin;
   G4double CathSubstrZ = Bz - marginz;
 
@@ -78,7 +87,8 @@
   G4double CathConvY2 = CathSubstrY2;
   G4double CathConvZ = CathSubstrZ;
 
-  rotGL->rotateY(90.*deg);
+	// Orient gas voxels so local strip/wire coordinates align with segment frame.
+	rotGL->rotateY(90.*deg);
 
   T14t = G4ThreeVector(0.,-Gx1 - CathSubstrX1,0);
   T14b = G4ThreeVector(0.,Gx1 + 2*CathConvX1 + CathSubstrX1,0);
@@ -89,9 +99,12 @@
 
   T14h = G4ThreeVector(Bthick/cos(theta_x + tilt_theta*deg)/2,0.,0.);
 
-  G4Box* Box =new G4Box("Cut", Gz+1*cm,Gx1,10*cm);
+	// Cutter solid used to split top/bottom gas trapezoids around the cathode.
+	G4Box* Box =new G4Box("Cut", Gz+1*cm,Gx1,10*cm);
 
-  G4Trap* TrdGLleft[195][20];
+	// Per-strip/per-wire temporary solids and logical volumes.
+	// Arrays are intentionally oversized to support parameter sweeps safely.
+	G4Trap* TrdGLleft[195][20];
   G4Trap* TrdGLright[195][20];
   G4VSolid* LayerTopLeft_cut[195][20];
   G4VSolid* LayerTopRight_cut[195][20];
@@ -107,10 +120,11 @@
   G4double GLy2[100][20],GLz[100][20];
 
 
-  G4double xx1 = (Gx1 - 2*CathConvX1 - 3*CathSubstrX1);
+	// Available gas width after removing cathode substrate and converter layers.
+	G4double xx1 = (Gx1 - 2*CathConvX1 - 3*CathSubstrX1);
   G4double xx2 = (Gx2 - 2*CathConvX2 - 3*CathSubstrX2);
   G4double ixx = (xx2-xx1)/2/n_wiresM;  // wire pitch
-  G4double izz = 2*Gz/n_wiresM - 0.1*mm;      // determined by the wire pitch; subtract am argin of 0.1 mm to avoid overlaps with the housing/coating
+	G4double izz = 2*Gz/n_wiresM - 0.1*mm;      // determined by wire pitch; subtract a 0.1 mm margin to avoid overlaps with housing/coating
 
 
   G4cout<<"strip = 1 is in the centre of the segment, strip = 16 is at the edge. "<<G4endl;
@@ -119,12 +133,12 @@
   G4cout<<"depth of a voxel (izz) is "<<izz*mm<<G4endl;
   G4cout<<"   "<<G4endl;
 
-  // create the gas voxels (volumes)
+	// Build gas voxels for all strip/wire indices in one segment.
 
 
-  for (G4int i=1; i<=n_stripsM/2; i++){  //loop over 1/2*strips
+  for (G4int i=1; i<=n_stripsM/2; i++){  // loop over half the strips (symmetry)
 
-  	for (G4int j=1; j<=n_wiresM; j++){  // loop over all 32 wires
+	for (G4int j=1; j<=n_wiresM; j++){  // loop over all wires
 
 	     GLz[i][j] = izz/2;
   	   GLy1[i][j] = xx1 + (j-1)*ixx;  //will become voxel front width after rotation
@@ -149,7 +163,7 @@
 	 logicTrdGLtopright[i][j] = new G4LogicalVolume(LayerTopRight_cut[i][j], gas_mat, "GasLayer_TR_M");
 	 logicTrdGLbottomright[i][j] = new G4LogicalVolume(LayerBottomRight_cut[i][j], gas_mat, "GasLayer_BR_M");
 
-// comment: after the 90-deg rotation of the segment top becomes "left" and bottom becomes "right"
+// After the 90-deg segment rotation, top maps to "left" and bottom to "right".
      logicTrdGLtopleft[i][j]->SetVisAttributes(green);
      logicTrdGLbottomleft[i][j]->SetVisAttributes(brown);
      logicTrdGLtopright[i][j]->SetVisAttributes(cyan); //green
@@ -160,7 +174,8 @@
 
   }
 
-  G4VSolid* Trd1 = new G4Trd("Al Box", Alx1,Alx2,Aly1,Aly2,Alz);
+	// Trapezoid shells from outside to inside.
+	G4VSolid* Trd1 = new G4Trd("Al Box", Alx1,Alx2,Aly1,Aly2,Alz);
   G4VSolid* Trd2 = new G4Trd("B Box", Bx1,Bx2,By1,By2,Bz);
   G4VSolid* Trd3 = new G4Trd("Gas Box", Gx1,Gx2,Gy1,Gy2,Gz);
   G4VSolid* Trd4 = new G4Trd("Cathode Substrate", CathSubstrX1,CathSubstrX2,CathSubstrY1,CathSubstrY2,CathSubstrZ);
@@ -172,7 +187,7 @@
   G4VSolid* Bshield = new G4Trd("Shield Box", Alx2,Alx2,Aly2,Aly2,shieldz);  /* Boron shielding at the back */
 
 
-// coating on both detector walls
+// Wall coatings from boolean subtraction of nested trapezoids on both detector walls.
 
   G4VSolid* Trd23 = new G4SubtractionSolid("B-G", Trd2, Trd3, rotTa, T14);
 
@@ -187,7 +202,7 @@
   logicTrdCathodeS = new G4LogicalVolume(Trd4, haube_mat, "Substrate Cathode");
   logicBShield = new G4LogicalVolume(Bshield, nconv_mat, "Shielding");
 
-// assembly the segment housing: Al haube + Haube Coating + cathode substrate + coating cathode left and right
+// Assemble one full segment: Al haube, B coating, cathode substrate, and dual cathode coatings.
 
  G4AssemblyVolume* assemblySegment = new G4AssemblyVolume();
  G4AssemblyVolume* assemblyModule = new G4AssemblyVolume();
@@ -210,8 +225,8 @@
 
  assemblySegment->AddPlacedVolume(logicBShield,Th,rotT13);
 
- G4double voxelYd = 4*CathConvX1 + 2*CathSubstrX1; // push up or down the gas voxels to avoid overlap with the cathode components
- G4double voxelYu = 2*CathConvX1 + 2*CathSubstrX1; // push up or down the gas voxels to avoid overlap with the cathode components
+ G4double voxelYd = 4*CathConvX1 + 2*CathSubstrX1; // lower bank offset to avoid cathode overlap
+ G4double voxelYu = 2*CathConvX1 + 2*CathSubstrX1; // upper bank offset to avoid cathode overlap
 
  G4cout<<"   "<<G4endl;
 
@@ -241,7 +256,7 @@
 
  G4cout<<"   "<<G4endl;
 
-// place the gas voxels inside the segment
+// Place voxel logical volumes into the segment assembly.
 
  for (G4int voxel=1; voxel<=n_stripsM/2; voxel++){     //voxel<=32, 1/2 no of strips
 
@@ -271,7 +286,7 @@
 
   }
   
-// calculate the solid angle covered by the segment  
+// Compute angular width covered by one segment (including clearance). 
 
  G4double distY_seg = 2*GLy1[1][n_wiresM]+ 4*(Althick + Bthick) + voxelYd;
 
@@ -285,8 +300,7 @@
  G4cout<<"solid angle covered by a segment is = "<<st_angle<<G4endl;
  G4cout<<" "<<G4endl;
 
-// position the detector segments around the sample in cylindrical geometry
-
+// Place segments around the sample to form one module.
  for (G4int copyNoZ=1; copyNoZ<=nM; copyNoZ++){
 
 		segX[copyNoZ] = dist_det*cos((copyNoZ-1)*st_angle*M_PI/180);
@@ -312,7 +326,7 @@
 
 // G4double init_angle = 0.; // -90 for the event file
 
-// position the detector modules around the sample
+// Replicate modules around the sample axis.
 
  for (G4int copyMod=1; copyMod<=no_modulesM; copyMod++){
  
@@ -328,12 +342,12 @@
 	}
 
 
-// generate lookup table voxel positions to correct the TOF
+// Generate lookup-table voxel centers used for TOF path-length corrections.
 
  oFile = fopen("LookupTablePowtex.txt","a");
 
 
-// top left strips
+// Quadrant 1: top-left voxels.
 
  for (G4int md=1; md<=no_modulesM; md++){
 
@@ -393,7 +407,7 @@
 
 G4cout<<"....writing out the top left voxel info done!"<<G4endl;
 
-// top right
+// Quadrant 2: top-right voxels.
 
 
  for (G4int md=1; md<=no_modulesM; md++){
@@ -443,7 +457,7 @@ G4cout<<"....writing out the top left voxel info done!"<<G4endl;
 
 G4cout<<"....writing out the top right voxel info done!"<<G4endl;
 
-// bottom left
+// Quadrant 3: bottom-left voxels.
 
  for (G4int md=1; md<=no_modulesM; md++){
 
@@ -495,7 +509,7 @@ G4cout<<"....writing out the top right voxel info done!"<<G4endl;
 G4cout<<"....writing out the bottom left voxel info done!"<<G4endl;
 
 
-// bottom right
+// Quadrant 4: bottom-right voxels.
 
 
  for (G4int md=1; md<=no_modulesM; md++){
@@ -551,7 +565,8 @@ G4cout<<"....writing out the bottom right voxel info done!"<<G4endl;
 
   fclose (oFile); 
 
-  TrAlu_vat = new G4VisAttributes(brown);
+	// Visualization attributes for quick geometry debugging.
+	TrAlu_vat = new G4VisAttributes(brown);
   TrBor_vat = new G4VisAttributes(red);
   TrBShield_vat = new G4VisAttributes(cyan);
   

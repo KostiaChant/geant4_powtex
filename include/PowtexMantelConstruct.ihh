@@ -45,6 +45,6 @@
  G4LogicalVolume*  logicBShield;
 
  /// NOTE: Gas voxel logical volumes (logicTrdGLtopleft, logicTrdGLbottomleft, etc.)
- /// are declared as local 2D arrays in the .icc file to avoid memory conflicts
- /// with physics classes. Each strip-wire combination creates a gas voxel
- /// for independent track reconstruction and TOF measurement.
+ /// are declared as local 2D arrays in the .icc implementation include.
+ /// Each strip-wire index pair maps to one voxel, enabling independent
+ /// position tagging for hit reconstruction and TOF correction lookup tables.

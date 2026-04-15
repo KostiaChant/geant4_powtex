@@ -1,8 +1,15 @@
 //******************************************************************************
 // PowtexConstruction.hh
 //
-// Defines the detector geometry construction for the Powtex neutron detector.
-// Inherits from G4VUserDetectorConstruction to build the detector structure.
+// Geometry entry point for the Powtex detector.
+//
+// This class owns the Geant4 detector construction workflow:
+// - define detector materials
+// - build the world volume
+// - delegate detailed Mantel geometry assembly to include-based helpers
+//
+// The heavy geometry logic lives in companion .ihh/.icc files to keep the
+// class interface compact and to preserve compatibility with existing macros.
 //
 // 1.00 IS, ESS, 2022:  First version.
 //******************************************************************************
@@ -14,8 +21,8 @@ class G4Material;
 #include "G4VUserDetectorConstruction.hh"
 
 /// Main detector construction class for Powtex
-/// Responsible for building the complete detector geometry including
-/// the mantel detector, materials, and logical volumes.
+/// Builds the complete detector hierarchy, including Mantel modules,
+/// material assignment, and world placement.
 class PowtexConstruction : public G4VUserDetectorConstruction
 {
   public:
@@ -25,20 +32,24 @@ class PowtexConstruction : public G4VUserDetectorConstruction
     /// Destructor
     ~PowtexConstruction();
     
-    /// Build and return the physical world volume with complete detector geometry
+    /// Build and return the master world physical volume.
+    /// This method is called by Geant4 at initialization time.
     G4VPhysicalVolume* Construct();
 
   private:
      
-    /// Define all materials used in the detector (gas, aluminum, boron, etc.)
+    /// Define all detector materials (gas mixture, aluminum, boron layers, world).
+    /// Material instances are assigned to members declared in PowtexMaterials.ihh.
     void DefineMaterials();
      
-    /// Include mantel detector construction member variables and logic
+    /// Persistent logical-volume members used by the Mantel construction code.
     #include "PowtexMantelConstruct.ihh"
-    /// Include material declarations
+
+    /// Material pointers shared between DefineMaterials() and Construct().
     #include "PowtexMaterials.ihh"
      
-    /// Default material for world volume
+    /// Reserved hook for optional world material override.
+    /// Kept for backward compatibility with earlier geometry variants.
     G4Material*  fMaterial;   
   
 
