@@ -148,6 +148,10 @@ The input file path is now configurable at runtime via three methods (in order o
 
 The input file configuration is handled by the `PrimaryGeneratorMessenger` class, which provides the UI command infrastructure. No code recompilation is needed to change the input file path.
 
+Both `macros/run.mac` and `macros/vis.mac` include default input file definitions:
+- **run.mac**: Uses `isotrop_reduced.dat` for batch mode simulation
+- **vis.mac**: Uses `noutascii_reduced.dat` for visualization (smaller dataset for faster rendering)
+
 The file *PrimaryGeneratorAction.cc.GPS* is also provided for the case the user wishes to 
 generate monochromatic neutrons from a source located at the sample position in order to test the detector setup. To use it, replace the *PrimaryGeneratorAction.cc* file, recompile, and run as usual (see section 5):  
 

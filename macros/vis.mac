@@ -1,5 +1,8 @@
 # x-axis: red, y-axis: green, z-axis:blue
 
+# Default primary input file (used for visualization)
+/powtex/source/inputFile data/input/VitessDataPOWTEX/noutascii_reduced.dat
+
 # ***** viewer-0 *************
 
 /vis/scene/create

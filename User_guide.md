@@ -38,6 +38,7 @@ This script will:
 4. Copy the executable `Powtex` to the project root if successful
 
 **Output:** Executable file `./Powtex` (and a copy in `./build/`)
+**Note:** The relative path is important when specifying the input file. The instructions below assume execution of the binary from the project root using `./Powtex` or `./build/Powtex`.
 
 ## 3. Run the Simulation
 
@@ -64,14 +65,22 @@ Available sample files in `data/input/VitessDataPOWTEX/`:
 - `isotrop.dat` - trajectories of neutron isotropically scattered off a sphere with a diameter of 1 cm
 - `isotrop_reduced.dat` - same as `isotrop.dat` but with smaller number of trajectories.
 
-### Method 3: Interactive Mode (GUI)
+### Method 3: Interactive Mode (UI) and Visualization
 For visualization and step-by-step debugging:
 
 ```bash
 ./Powtex
 ```
 
-At the Geant4 prompt, you can set the input file interactively before running the macro:
+Then execute the visualization macro (which includes a default input file):
+
+```
+Idle> /control/execute macros/vis.mac
+```
+
+The `vis.mac` file is pre-configured to use `noutascii_reduced.dat` (100 events), which is ideal for interactive visualization.
+
+**Alternative:** For custom input files or different running conditions, you can still set the input file interactively:
 
 ```
 Idle> /powtex/source/inputFile data/input/VitessDataPOWTEX/noutascii_reduced.dat
@@ -79,12 +88,6 @@ Idle> /control/execute macros/run_interactive.mac
 ```
 
 **Important:** Use `run_interactive.mac` instead of `run.mac` when specifying input interactively. The `run.mac` file contains a hardcoded input file path that will override your interactive setting.
-
-Alternatively, for visualization (input file is specified in macro):
-
-```
-Idle> /control/execute macros/vis.mac
-```
 
 ## 4. Full Analysis Pipeline
 
@@ -119,7 +122,7 @@ The input file can be specified three ways (in order of priority):
 2. **Macro file command**:
    Edit `macros/run.mac` and change:
    ```
-   /powtex/source/inputFile data/input/VitessDataPOWTEX/noutascii_reduced.dat
+   /powtex/source/inputFile /path/to/file.dat
    ```
 
 3. **Interactive UI command**:
