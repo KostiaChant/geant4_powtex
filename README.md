@@ -12,6 +12,8 @@ Tested with geant4-11.0.2 in May 2022.
 
 Tested on Mac iOS Catalina and CentOS8_2 in February 2022. 
 
+Current recommended environment for this repository is the `cxx_geant4` conda/mamba environment defined in `cpp_environment.yml` (Geant4 11.3.2, ROOT, CMake toolchain).
+
 The simulation strategy is explained in detail in the following reference:
 
     I. Stefanescu, M. Christensen, R. Hall-Wilton, S. Holm-Dahlin, K. Iversen, 
@@ -127,13 +129,13 @@ The input file path is now configurable at runtime via three methods (in order o
 1. **Command-line argument (highest priority):** Pass the input file path directly to the executable. This will override any macro file configuration.
 
    ```
-   % cd ./build && ./Powtex --input-file /path/to/data/file.dat ../macros/run.mac
+	% ./build/Powtex --input-file /path/to/data/file.dat macros/run.mac
    ```
 
 2. **Macro command:** Set the input file via the `/powtex/source/inputFile` command in your macro file. The default macro file (`macros/run.mac`) includes this command:
 
    ```
-   /powtex/source/inputFile data/input/VitessDataPOWTEX/isotrop_without_reps.dat
+	/powtex/source/inputFile data/input/VitessDataPOWTEX/isotrop_reduced.dat
    ```
 
    To use a different file, edit this line in your macro file before running the simulation.
@@ -152,16 +154,43 @@ Both `macros/run.mac` and `macros/vis.mac` include default input file definition
 - **run.mac**: Uses `isotrop_reduced.dat` for batch mode simulation
 - **vis.mac**: Uses `noutascii_reduced.dat` for visualization (smaller dataset for faster rendering)
 
+**Input File Format Specification:**
+
+The input file must be a plain text file with **9 space-separated columns per line**. 
+Lines starting with `#` are treated as comments and skipped. Empty lines are also ignored.
+
+| Column | Quantity | Unit | Description |
+|--------|----------|------|-------------|
+| 1 | Time-of-Flight (ToF) | milliseconds | Travel time of neutron (from its source) as it exits sample volume |
+| 2 | Wavelength (λ) | Angstroms (Å) | De Broglie wavelength of neutron |
+| 3 | Weight | dimensionless | Statistical weight (count rate) for this event |
+| 4 | Position X | cm | VITESS sample coordinate X |
+| 5 | Position Y | cm | VITESS sample coordinate Y |
+| 6 | Position Z | cm | VITESS sample coordinate Z (beam axis) |
+| 7 | Direction X | dimensionless | Unit vector component X |
+| 8 | Direction Y | dimensionless | Unit vector component Y |
+| 9 | Direction Z | dimensionless | Unit vector component Z |
+
+**Note:** Quantities in the last three columns are called *direction cosines* in VITESS.
+
+**Coordinate System Transformation:**
+VITESS uses X as the beam axis, while Geant4 uses Z as the beam axis. The simulation automatically applies the transformation:
+- Geant4 X ← VITESS Z
+- Geant4 Y ← VITESS Y
+- Geant4 Z ← VITESS X (+ optional sample_shift)
+
+This transformation is applied to both position and direction vectors.
+
 The file *PrimaryGeneratorAction.cc.GPS* is also provided for the case the user wishes to 
 generate monochromatic neutrons from a source located at the sample position in order to test the detector setup. To use it, replace the *PrimaryGeneratorAction.cc* file, recompile, and run as usual (see section 5):  
 
-% cp PrimaryGeneratorAction.cc PrimaryGeneratorAction.cc.file 
+% cp src/PrimaryGeneratorAction.cc src/PrimaryGeneratorAction.cc.file 
 
-% cp PrimaryGeneratorAction.cc.GPS PrimaryGeneratorAction.cc 
+% cp src/PrimaryGeneratorAction.cc.GPS src/PrimaryGeneratorAction.cc 
 
-% ./compile_Powtex_cmake.sh 
+% ./scripts/compile_Powtex_cmake.sh 
 
-% ./Powtex --input-file ../data/input/VitessDataPOWTEX/isotrop_without_reps.dat ../macros/run.mac 
+% ./Powtex --input-file data/input/VitessDataPOWTEX/isotrop_reduced.dat macros/run.mac 
 
    
 4 - TRACKING
@@ -191,33 +220,93 @@ The imprint number is used by the code to extract the module and segment number 
   
 5 - USAGE
 --------------
- 
-  - compile the code with the help of the script provided after setting the correct path for 		
-  	the variable 'DGeant4_DIR':
-  
-  % ./compile_Powtex_cmake.sh
-  
-  - execute the code in 'batch' mode from macro file:
-  
-	% cd ./build && ./Powtex ../macros/run.mac
 
-    To override the input file set in the macro, use the --input-file argument:
-    
-	% cd ./build && ./Powtex --input-file /path/to/data/file.dat ../macros/run.mac
+### 5.1 Set up mamba environment
 
-  - execute the code in 'interactive mode' with visualization (see also Pct. 6 below):
-  
-	% cd ./build && ./Powtex
-	
-	.... 
-	
-	Idle> /control/execute ../macros/vis.mac
-	
-	....
-	
-	Idle> exit
-	
-	Idle> exit
+Create the environment (one time):
+
+```bash
+mamba env create -f cpp_environment.yml
+```
+
+Activate it before building or running:
+
+```bash
+mamba activate cxx_geant4
+```
+
+### 5.2 Build the code
+
+Compile from the project root:
+
+```bash
+./scripts/compile_Powtex_cmake.sh
+```
+
+This script cleans `build/`, configures CMake, builds the project, and copies the `Powtex` executable to the project root on success.
+
+### 5.3 Run the simulation
+
+Method 1: batch mode with macro-defined input file
+
+```bash
+./Powtex macros/run.mac
+```
+
+Method 2: override input file at runtime
+
+```bash
+./Powtex --input-file data/input/VitessDataPOWTEX/noutascii_reduced.dat macros/run.mac
+```
+
+Method 3: interactive mode and visualization
+
+```bash
+./Powtex
+```
+
+Then in the Geant4 UI:
+
+```
+Idle> /control/execute macros/vis.mac
+```
+
+For custom input in interactive mode:
+
+```
+Idle> /powtex/source/inputFile data/input/VitessDataPOWTEX/noutascii_reduced.dat
+Idle> /control/execute macros/run_interactive.mac
+```
+
+Available sample files in `data/input/VitessDataPOWTEX/`:
+- `noutascii_reduced.dat` (100 events; fast test and visualization)
+- `noutascii_biosample_r.dat` (large dataset)
+- `isotrop.dat`
+- `isotrop_reduced.dat`
+
+### 5.4 Full analysis pipeline
+
+To run the full simulation and ROOT analysis chain in one command:
+
+```bash
+./scripts/run_full_analysis.sh
+```
+
+This generates analysis outputs in `data/output/` including:
+- `powtex.root`
+- `powtex_lookup.root`
+- `powtex_new_cal.root`
+- `detections.csv`
+
+### 5.5 Quick troubleshooting
+
+| Issue | Solution |
+|-------|----------|
+| `Powtex` command not found | Run from project root with `./Powtex` or use `./build/Powtex` |
+| Geant4 variables missing | Activate environment: `mamba activate cxx_geant4` |
+| ROOT not found | Ensure the same mamba environment is active |
+| Build fails | Clean rebuild: `rm -rf build/* && ./scripts/compile_Powtex_cmake.sh` |
+| Visualization is slow/stuck | Use `noutascii_reduced.dat` instead of large input files |
 	
 	
 6 - USAGE for debugging and learning purposes
@@ -226,7 +315,7 @@ The imprint number is used by the code to extract the module and segment number 
     If you want to get familar with the model and investigate the tracking results you can 
     save the standard GEANT4 output information in a file:
     
-	% ./Powtex  run.mac | tee test.out
+	% ./Powtex macros/run.mac | tee test.out
 	
     The standard Geant4 verbosity can be activated via the following UI commands in the 
     run.mac macro:
