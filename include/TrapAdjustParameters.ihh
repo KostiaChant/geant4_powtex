@@ -18,7 +18,7 @@ void TrapParamAdjustment(const double (&in)[11], double (&out)[11])
     double dy1 = in[3], dx1 = in[4], dx2 = in[5], alp1 = in[6];
     double dy2 = in[7], dx3 = in[8], dx4 = in[9], alp2 = in[10];
 
-    // Adjust taper angles: average the two face angles for consistency
+    // Adjust taper angles (radians): average the two face angles for consistency
     alp1 = alp2 = std::atan((std::tan(alp1) + std::tan(alp2))/2.);
 
     // Adjust width parameters: ensure linear variation across the trapezoid

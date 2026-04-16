@@ -39,8 +39,10 @@ G4double pos_x = 0.0,pos_y=0.0,pos_z=0.0,slength=0.;
 G4int copyNo=0,copyS=0,dd=0;
 G4int kk=0;
 
+// Mantel geometry is organized in 9 imprints per module (0..8 segment ids).
 G4int no_segments = 8; 
 
+// Event output stream. One line is appended per accepted gas-boundary hit.
 ofstream myfile;
  
 
@@ -52,8 +54,8 @@ void SteppingAction::UserSteppingAction(const G4Step* fStep)
 
   G4Track* fTrack = fStep->GetTrack();
 
-  G4StepPoint* prepoint = fStep->GetPreStepPoint();   //this point is at the boundary
-  G4StepPoint* postpoint = fStep->GetPostStepPoint(); //this point is first in the volume
+	G4StepPoint* prepoint = fStep->GetPreStepPoint();   // Boundary point.
+	G4StepPoint* postpoint = fStep->GetPostStepPoint(); // First point in the next volume.
 
   G4String proc = postpoint->GetProcessDefinedStep()->GetProcessName();  
   
@@ -83,9 +85,11 @@ void SteppingAction::UserSteppingAction(const G4Step* fStep)
 		
 	    str_vol_m = fTrack->GetOriginTouchable()->GetVolume()->GetName();
 		
-		if (int(str_vol_m.find("Converter Cathode")) > 0) {dd = 10;}  // if neutron detected on the converter deposited on the cathode
-		    else {dd = 20;}  // if neutron detected on the converter deposited on the housing
+		// Detector-side tag: 10 for cathode converter, 20 for housing converter.
+		if (int(str_vol_m.find("Converter Cathode")) > 0) {dd = 10;}
+		    else {dd = 20;}
 		
+		// Parse imprint and voxel ids from volume name tokens.
 		G4int pos3 = str_vol.find("_",9);
 		G4String imp_no_str2 = str_vol.substr(pos3+1,3);   // imprint is the segment number
 		      imp_no = atoi(imp_no_str2);                // counting starts at 2
@@ -96,6 +100,7 @@ void SteppingAction::UserSteppingAction(const G4Step* fStep)
 								
 		if (int(str_vol.find("_M_")) > 0)  // Mantel
 		      {  ss_no = 7;
+		      	 // Convert linear imprint index into module and segment ids.
 		      	 mod_no = abs((imp_no - 1)/(no_segments+1)) + 1;  // module number
 				 seg_no = (imp_no - 1) % (no_segments+1);  // segment number
 				 sec_no = 1;   // this is actually the module number
@@ -134,7 +139,8 @@ void SteppingAction::UserSteppingAction(const G4Step* fStep)
 //		G4cout<<"pos_y event ="<<pos_y<<G4endl;
 //		G4cout<<"pos_z event ="<<pos_z<<G4endl;
 
-                if (int(vname.find("TL")) > 0) { copyS =1;}
+		        // Map quadrant label to local copy index expected by strip/wire mapping.
+		        if (int(vname.find("TL")) > 0) { copyS =1;}
 		   else if (int(vname.find("TR")) > 0) { copyS =2;}
 		   	else if (int(vname.find("BL")) > 0) { copyS =3;}  // copyS =1;
 			   	else if (int(vname.find("BR")) > 0) { copyS =4;}  //copyS =2;
@@ -144,7 +150,9 @@ void SteppingAction::UserSteppingAction(const G4Step* fStep)
 		myfile.open("myfile_info.txt", ios::out | ios::app);
 
 //		if (nw>0.0000001)
-		
+		// Output columns:
+		// tof, stepNo, dd, detType, sector, module, segment, voxel, copyS,
+		// weight, kineticEnergy, posX, posY, posZ
 		myfile << tof<<"\t"<<StepNo<<"\t"<<dd<<"\t"<<ss_no<<"\t"<<sec_no<<"\t"<<mod_no<<"\t"<<seg_no<<"\t"<<vox_no<<"\t"<<copyS<<"\t"<<nw<<"\t"<<Ene<<"\t"<<pos_x<<"\t"<<pos_y<<"\t"<<pos_z<<endl;
 			   
 			   
