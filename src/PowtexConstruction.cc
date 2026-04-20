@@ -118,7 +118,7 @@ G4VPhysicalVolume* PowtexConstruction::Construct()
   
   G4int nM = 8;   // number of segments (cassettes) per module
  
-  G4int no_modulesM = 4;  // set 45 to fill the full cylindrical coverage
+  G4int no_modulesM = 32;  // set 45 to fill the full cylindrical coverage
   
   G4int n_stripsM = 192; // strips per segment (mirrored around center)
   G4int n_wiresM = 16;   // wire layers per segment depth
