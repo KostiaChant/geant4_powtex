@@ -3,6 +3,18 @@
 # Default primary input file (used for visualization)
 /powtex/source/inputFile data/input/VitessDataPOWTEX/noutascii_reduced.dat
 
+# Show only neutron trajectories in all viewers
+# /vis/filtering/trajectories/create/particleFilter
+# /vis/filtering/trajectories/particleFilter-0/reset true
+# /vis/filtering/trajectories/particleFilter-0/add neutron
+# /vis/filtering/trajectories/particleFilter-0/active true
+
+# Keep only primary tracks (Parent ID = 0)
+/vis/filtering/trajectories/create/attributeFilter
+/vis/filtering/trajectories/attributeFilter-0/setAttribute PID
+/vis/filtering/trajectories/attributeFilter-0/addValue 0
+/vis/filtering/trajectories/attributeFilter-0/active true
+
 # ***** viewer-0 *************
 
 /vis/scene/create
