@@ -119,15 +119,16 @@ G4VPhysicalVolume* PowtexConstruction::Construct()
   G4int nM = 8;   // number of segments (cassettes) per module
  
   // Assuming that the detector spans 270 degrees in phi
-  G4int no_modulesM = 27;  // set 36 to fill the full cylindrical coverage
+  G4int no_modulesM = 2;  // set 36 to fill the full cylindrical coverage
   
   G4int n_stripsM = 192; // strips per segment (mirrored around center)
   G4int n_wiresM = 16;   // wire layers per segment depth
   
   G4double dist_det = 800*mm;   /* sample-to-segment reference distance */
 
-  G4double init_angleM = 215.4; // module ring start angle (legacy scan values kept in comment)
+  G4double init_angleM = 70; // module ring start angle (legacy scan values kept in comment)
   // 122 for the +3*mm setting, 123.2 for the 0*mm setting
+  // 70 in Irina Stefanescu's repo, 215.4 to center the opening in negative y direction
   
   G4double dthetaM = 0.469*M_PI/180;  /* angular pitch between neighboring strips */
   
