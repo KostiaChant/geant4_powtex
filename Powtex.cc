@@ -16,8 +16,7 @@
 // geant4 includes
 //
 #include "G4UImanager.hh"
-#include "G4UIterminal.hh"
-#include "G4UItcsh.hh"
+#include "G4UIExecutive.hh"
 
 #include "Randomize.hh"
 
@@ -27,9 +26,14 @@
 namespace {
 void PrintUsage(const char* executableName) {
   G4cout << "Usage:\n"
-         << "  " << executableName << " [macroFile] [inputDataFile] [-i]\n"
-         << "  " << executableName << " [macroFile] [--input-file inputDataFile] [-i]\n"
+         << "  " << executableName << " [macroFile] [inputDataFile] [-i] [--qt]\n"
+         << "  " << executableName << " [macroFile] [--input-file inputDataFile] [-i] [--qt]\n"
          << G4endl;
+}
+
+G4bool FileExists(const G4String& filePath) {
+  std::ifstream file(filePath);
+  return file.good();
 }
 }
 
@@ -42,11 +46,18 @@ int main(int argc,char** argv) {
   G4String macroFile;
   G4String inputFileFromCommandLine;
   G4bool interactive = false;
+  G4bool forceQtSession = false;
 
   for (G4int i = 1; i < argc; ++i) {
     const G4String arg = argv[i];
 
     if (arg == "-i") {
+      interactive = true;
+      continue;
+    }
+
+    if (arg == "--qt") {
+      forceQtSession = true;
       interactive = true;
       continue;
     }
@@ -147,17 +158,43 @@ int main(int argc,char** argv) {
   // User interactions
   //------------------
   if (interactive) {
-    G4UIsession* session = 0;
+    G4UIExecutive* session = forceQtSession
+        ? new G4UIExecutive(argc, argv, "Qt")
+        : new G4UIExecutive(argc, argv);
 
-#ifdef G4UI_USE_XM
-    session = new G4UIXm(argc,argv);
-#else
-#ifdef G4UI_USE_TCSH
-    session = new G4UIterminal(new G4UItcsh);
-#else
-    session = new G4UIterminal();
-#endif
-#endif
+    if (macroFile.empty()) {
+      G4String visMacro;
+
+      if (forceQtSession) {
+        if (FileExists("macros/vis_qt_single.mac")) {
+          visMacro = "macros/vis_qt_single.mac";
+        } else if (FileExists("vis_qt_single.mac")) {
+          visMacro = "vis_qt_single.mac";
+        } else if (FileExists("macros/vis.mac")) {
+          visMacro = "macros/vis.mac";
+        } else if (FileExists("vis.mac")) {
+          visMacro = "vis.mac";
+        }
+      } else {
+        if (FileExists("macros/vis.mac")) {
+          visMacro = "macros/vis.mac";
+        } else if (FileExists("vis.mac")) {
+          visMacro = "vis.mac";
+        }
+      }
+
+      if (!visMacro.empty()) {
+        const G4String command = "/control/execute ";
+        const G4int visStatus = UI->ApplyCommand(command + visMacro);
+        if (visStatus != 0) {
+          G4cerr << "WARNING: Failed to execute visualization macro file: "
+                 << visMacro << G4endl;
+        }
+      } else {
+        G4cerr << "WARNING: No vis macro found in macros/ or current directory."
+               << G4endl;
+      }
+    }
 
     G4cout << "\nType 'exit' to end the program.\n";
     session->SessionStart();
