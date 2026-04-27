@@ -4,7 +4,7 @@
 
 cd build
 
-# rm -r * 
+rm -r * 
 
 cmake -DGeant4_DIR=~/g4new/geant4-11.0.2-install/lib/Geant4-11.0.2 ../
 echo "   "

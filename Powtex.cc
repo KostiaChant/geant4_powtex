@@ -4,6 +4,8 @@
 //
 #include <fstream>
 #include <math.h>
+#include <cstdio>
+#include <cerrno>
 #include "G4ios.hh"
 
 
@@ -22,18 +24,82 @@
 
 // visualization
 #include "G4VisExecutive.hh"
+#include "G4VisManager.hh"
+#include "G4VGraphicsSystem.hh"
 
 namespace {
 void PrintUsage(const char* executableName) {
   G4cout << "Usage:\n"
-         << "  " << executableName << " [macroFile] [inputDataFile] [-i] [--qt]\n"
-         << "  " << executableName << " [macroFile] [--input-file inputDataFile] [-i] [--qt]\n"
+         << "  " << executableName << " [macroFile] [inputDataFile] [-i] [--gui|--cli]\n"
+         << "  " << executableName << " [macroFile] [--input-file inputDataFile] [-i] [--gui|--cli]\n"
+         << "Options:\n"
+         << "  --gui, --qt  Force GUI interactive session (Qt).\n"
+         << "  --cli        Force terminal interactive session.\n"
          << G4endl;
 }
 
 G4bool FileExists(const G4String& filePath) {
   std::ifstream file(filePath);
   return file.good();
+}
+
+void RemoveOutputFileIfPresent(const char* filePath) {
+  if (std::remove(filePath) == 0) {
+    G4cout << "Deleted startup output file: " << filePath << G4endl;
+    return;
+  }
+
+  if (errno == ENOENT) {
+    G4cout << "Startup output file not found: " << filePath << G4endl;
+    return;
+  }
+
+  G4cerr << "WARNING: Failed to delete startup output file: "
+         << filePath << " (errno=" << errno << ")" << G4endl;
+}
+
+G4String SelectVisualizationMacro(const G4bool preferQtMacro) {
+  const G4String candidates[] = {
+      "macros/vis_qt_single.mac",
+      "vis_qt_single.mac",
+      "macros/vis.mac",
+      "vis.mac"};
+
+  if (preferQtMacro) {
+    for (const auto& candidate : candidates) {
+      if (FileExists(candidate)) {
+        return candidate;
+      }
+    }
+    return "";
+  }
+
+  if (FileExists("macros/vis.mac")) {
+    return "macros/vis.mac";
+  }
+  if (FileExists("vis.mac")) {
+    return "vis.mac";
+  }
+  return "";
+}
+
+G4bool HasUsableGraphicsDriver(G4VisManager* visManager) {
+  if (visManager == nullptr) {
+    return false;
+  }
+
+  const auto& graphicsSystems = visManager->GetAvailableGraphicsSystems();
+  if (graphicsSystems.empty()) {
+    return false;
+  }
+
+  for (const auto* graphicsSystem : graphicsSystems) {
+    if (graphicsSystem != nullptr && graphicsSystem->GetNickname() != "TSG") {
+      return true;
+    }
+  }
+
+  return false;
 }
 }
 
@@ -47,30 +113,70 @@ int main(int argc,char** argv) {
   G4String inputFileFromCommandLine;
   G4bool interactive = false;
   G4bool forceQtSession = false;
+  G4bool forceCliSession = false;
+  G4bool positionalOnly = false;
 
   for (G4int i = 1; i < argc; ++i) {
     const G4String arg = argv[i];
 
-    if (arg == "-i") {
-      interactive = true;
+    if (!positionalOnly && arg == "--") {
+      positionalOnly = true;
       continue;
     }
 
-    if (arg == "--qt") {
-      forceQtSession = true;
-      interactive = true;
-      continue;
-    }
+    if (!positionalOnly) {
+      if (arg == "-h" || arg == "--help") {
+        PrintUsage(argv[0]);
+        return EXIT_SUCCESS;
+      }
 
-    if (arg == "--input-file" || arg == "-f") {
-      if (i + 1 >= argc) {
-        G4cerr << "ERROR: Missing value for " << arg << G4endl;
+      if (arg == "-i") {
+        interactive = true;
+        continue;
+      }
+
+      if (arg == "--qt" || arg == "--gui") {
+        if (forceCliSession) {
+          G4cerr << "ERROR: --gui/--qt and --cli cannot be used together."
+                 << G4endl;
+          PrintUsage(argv[0]);
+          return EXIT_FAILURE;
+        }
+
+        forceQtSession = true;
+        interactive = true;
+        continue;
+      }
+
+      if (arg == "--cli") {
+        if (forceQtSession) {
+          G4cerr << "ERROR: --cli and --gui/--qt cannot be used together."
+                 << G4endl;
+          PrintUsage(argv[0]);
+          return EXIT_FAILURE;
+        }
+
+        forceCliSession = true;
+        interactive = true;
+        continue;
+      }
+
+      if (arg == "--input-file" || arg == "-f") {
+        if (i + 1 >= argc) {
+          G4cerr << "ERROR: Missing value for " << arg << G4endl;
+          PrintUsage(argv[0]);
+          return EXIT_FAILURE;
+        }
+
+        inputFileFromCommandLine = argv[++i];
+        continue;
+      }
+
+      if (!arg.empty() && arg[0] == '-') {
+        G4cerr << "ERROR: Unknown option: " << arg << G4endl;
         PrintUsage(argv[0]);
         return EXIT_FAILURE;
       }
-
-      inputFileFromCommandLine = argv[++i];
-      continue;
     }
 
     if (macroFile.empty()) {
@@ -93,17 +199,11 @@ int main(int argc,char** argv) {
   }
 
 //  remove("myfile_info.txt");  
-  if (remove("myfile_info.txt") !=0 )
-    puts ("File not found, continue....");
-  else 
-    puts("Output file myfile_info.txt succesfully deleted at the begining of the run, continue....");
+  RemoveOutputFileIfPresent("myfile_info.txt");
 
 
 //  remove("LookupTablePowtex.txt");
-  if (remove("LookupTablePowtex.txt") !=0 )
-    puts ("File not found, continue....");
-  else 
-    puts("LookupTablePowtex.txt succesfully deleted at the begining of the run, continue....");
+  RemoveOutputFileIfPresent("LookupTablePowtex.txt");
 
   // Run manager
   //------------
@@ -158,40 +258,46 @@ int main(int argc,char** argv) {
   // User interactions
   //------------------
   if (interactive) {
-    G4UIExecutive* session = forceQtSession
-        ? new G4UIExecutive(argc, argv, "Qt")
-        : new G4UIExecutive(argc, argv);
+    G4UIExecutive* session = nullptr;
+    if (forceQtSession) {
+      session = new G4UIExecutive(argc, argv, "Qt");
+    } else if (forceCliSession) {
+      session = new G4UIExecutive(argc, argv, "tcsh");
+    } else {
+      session = new G4UIExecutive(argc, argv);
+    }
+
+    if (forceQtSession && !session->IsGUI()) {
+      G4cerr << "WARNING: GUI session requested, but no GUI backend is active."
+             << G4endl;
+    }
 
     if (macroFile.empty()) {
-      G4String visMacro;
+      if (session->IsGUI()) {
+        const G4bool hasGraphicsDriver = HasUsableGraphicsDriver(theVisManager);
+        const G4String visMacro = SelectVisualizationMacro(true);
 
-      if (forceQtSession) {
-        if (FileExists("macros/vis_qt_single.mac")) {
-          visMacro = "macros/vis_qt_single.mac";
-        } else if (FileExists("vis_qt_single.mac")) {
-          visMacro = "vis_qt_single.mac";
-        } else if (FileExists("macros/vis.mac")) {
-          visMacro = "macros/vis.mac";
-        } else if (FileExists("vis.mac")) {
-          visMacro = "vis.mac";
+        if (!hasGraphicsDriver) {
+          G4cerr << "WARNING: No usable graphics driver found (TSG fallback only)."
+                 << G4endl;
+          G4cerr << "         Skipping visualization macro execution."
+                 << G4endl;
+        }
+
+        if (hasGraphicsDriver && !visMacro.empty()) {
+          const G4String command = "/control/execute ";
+          const G4int visStatus = UI->ApplyCommand(command + visMacro);
+          if (visStatus != 0) {
+            G4cerr << "WARNING: Failed to execute visualization macro file: "
+                   << visMacro << G4endl;
+          }
+        } else if (hasGraphicsDriver) {
+          G4cerr << "WARNING: No vis macro found in macros/ or current directory."
+                 << G4endl;
         }
       } else {
-        if (FileExists("macros/vis.mac")) {
-          visMacro = "macros/vis.mac";
-        } else if (FileExists("vis.mac")) {
-          visMacro = "vis.mac";
-        }
-      }
-
-      if (!visMacro.empty()) {
-        const G4String command = "/control/execute ";
-        const G4int visStatus = UI->ApplyCommand(command + visMacro);
-        if (visStatus != 0) {
-          G4cerr << "WARNING: Failed to execute visualization macro file: "
-                 << visMacro << G4endl;
-        }
-      } else {
-        G4cerr << "WARNING: No vis macro found in macros/ or current directory."
+        G4cout << "Terminal interactive session selected."
+               << " Skipping visualization macro auto-load."
                << G4endl;
       }
     }
